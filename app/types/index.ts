@@ -1,3 +1,12 @@
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  password: string;
+  role: 'admin' | 'user'; // Add role field
+  createdAt: string;
+}
+
 export interface Expense {
   id: string;
   amount: number;
@@ -6,7 +15,8 @@ export interface Expense {
   date: string;
   category?: string;
   createdAt: string;
-  userId?: string; // Add this for user-specific data
+  userId?: string;
+  userName?: string; // For admin to see who added
 }
 
 export interface ExpenseFormData {
@@ -43,19 +53,10 @@ export type CategoryType =
   | 'Healthcare'
   | 'Other';
 
-// Add authentication types
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  password: string;
-  createdAt: string;
-}
-
 export interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (name: string, email: string, password: string) => Promise<boolean>;
+  register: (name: string, email: string, password: string, role?: 'admin' | 'user') => Promise<boolean>;
   logout: () => void;
 }

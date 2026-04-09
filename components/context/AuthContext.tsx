@@ -1,55 +1,86 @@
 'use client';
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-
-interface User {
-    id: string;
-    name: string;
-    email: string;
-}
-
-interface AuthContextType {
-    user: User | null;
-    login: (email: string, password: string) => Promise<void>;
-    logout: () => void;
-    isLoading: boolean;
-}
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { User, AuthContextType } from '../types';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [user, setUser] = useState<User | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
+};
 
-    const login = async (email: string, password: string) => {
-        setIsLoading(true);
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem('currentUser');
+        if (storedUser) {
+            setUser(JSON.parse(storedUser));
+        }
+        setLoading(false);
+    }, []);
+
+    const login = async (email: string, password: string): Promise<boolean> => {
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 500));
-            setUser({
-                id: '1',
-                name: email.split('@')[0],
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const user = users.find((u: User) => u.email === email && u.password === password);
+
+            if (user) {
+                const { password, ...userWithoutPassword } = user;
+                setUser(userWithoutPassword as User);
+                localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Login error:', error);
+            return false;
+        }
+    };
+
+    const register = async (name: string, email: string, password: string, role: 'admin' | 'user' = 'user'): Promise<boolean> => {
+        try {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+
+            if (users.some((u: User) => u.email === email)) {
+                return false;
+            }
+
+            const newUser: User = {
+                id: Date.now().toString(),
                 email,
-            });
-        } finally {
-            setIsLoading(false);
+                name,
+                password,
+                role,
+                createdAt: new Date().toISOString(),
+            };
+
+            users.push(newUser);
+            localStorage.setItem('users', JSON.stringify(users));
+
+            const { password: _, ...userWithoutPassword } = newUser;
+            setUser(userWithoutPassword as User);
+            localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
+
+            return true;
+        } catch (error) {
+            console.error('Registration error:', error);
+            return false;
         }
     };
 
     const logout = () => {
         setUser(null);
+        localStorage.removeItem('currentUser');
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+        <AuthContext.Provider value={{ user, loading, login, register, logout }}>
             {children}
         </AuthContext.Provider>
     );
-};
-
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error('useAuth must be used within AuthProvider');
-    }
-    return context;
 };

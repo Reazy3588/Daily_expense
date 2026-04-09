@@ -1,7 +1,7 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/app/context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { useExpenses } from '@/hooks/useExpenses';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { ExpenseForm } from '@/components/dashboard/ExpenseForm';
@@ -9,18 +9,22 @@ import { ExpenseList } from '@/components/dashboard/ExpenseList';
 import { ExpenseChart } from '@/components/dashboard/ExpenseChart';
 import { Header } from '@/components/layout/Header';
 import { Container } from '@/components/layout/Container';
-import { Expense } from '@/app/types';
-import { LogOut } from 'lucide-react';
-
-export const dynamic = 'force-dynamic';
+import { Expense } from '../types';
+import { LogOut, Shield } from 'lucide-react';
 
 export default function DashboardPage() {
-    const { user, logout } = useAuth();
+    const { user, logout, isAdmin } = useAuth();
     const router = useRouter();
     const { expenses, addExpense, updateExpense, deleteExpense, getStats } = useExpenses();
     const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
     const stats = getStats();
+
+    useEffect(() => {
+        if (!user) {
+            router.push('/login');
+        }
+    }, [user, router]);
 
     const handleEdit = (expense: Expense) => {
         setEditingExpense(expense);
@@ -47,6 +51,15 @@ export default function DashboardPage() {
         <>
             <Header>
                 <div className="flex items-center gap-4">
+                    {isAdmin && (
+                        <button
+                            onClick={() => router.push('/admin')}
+                            className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                        >
+                            <Shield className="w-4 h-4" />
+                            Admin Panel
+                        </button>
+                    )}
                     <div className="text-right">
                         <p className="text-sm text-blue-100">Welcome,</p>
                         <p className="font-semibold">{user.name}</p>

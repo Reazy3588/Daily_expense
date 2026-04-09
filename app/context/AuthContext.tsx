@@ -21,15 +21,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (storedUser) {
             setUser(JSON.parse(storedUser));
         }
+
+        // Initialize admin if not exists
+        initializeAdmin();
         setLoading(false);
     }, []);
+
+    const initializeAdmin = () => {
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        const adminExists = users.some((u: User) => u.role === 'admin');
+
+        if (!adminExists) {
+            const adminUser: User = {
+                id: 'admin_' + Date.now().toString(),
+                email: 'admin@expense.com',
+                name: 'Administrator',
+                password: 'admin123',
+                role: 'admin',
+                createdAt: new Date().toISOString(),
+                isActive: true,
+            };
+            users.push(adminUser);
+            localStorage.setItem('users', JSON.stringify(users));
+            console.log('Admin user created - Email: admin@expense.com, Password: admin123');
+        }
+    };
 
     const login = async (email: string, password: string): Promise<boolean> => {
         try {
             const users = JSON.parse(localStorage.getItem('users') || '[]');
             const user = users.find((u: User) => u.email === email && u.password === password);
 
-            if (user) {
+            if (user && user.isActive) {
+                // Update last login
+                user.lastLogin = new Date().toISOString();
+                const updatedUsers = users.map((u: User) =>
+                    u.id === user.id ? { ...u, lastLogin: user.lastLogin } : u
+                );
+                localStorage.setItem('users', JSON.stringify(updatedUsers));
+
                 const { password, ...userWithoutPassword } = user;
                 setUser(userWithoutPassword as User);
                 localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
@@ -55,7 +85,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 email,
                 name,
                 password,
+                role: 'user',
                 createdAt: new Date().toISOString(),
+                isActive: true,
             };
 
             users.push(newUser);
@@ -77,8 +109,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem('currentUser');
     };
 
+    const isAdmin = user?.role === 'admin';
+
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+        <AuthContext.Provider value={{ user, loading, login, register, logout, isAdmin }}>
             {children}
         </AuthContext.Provider>
     );

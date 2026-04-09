@@ -8,7 +8,13 @@ export default function Home() {
   useEffect(() => {
     const user = localStorage.getItem('currentUser');
     if (user) {
-      router.push('/dashboard');
+      const parsedUser = JSON.parse(user);
+      // Redirect based on role
+      if (parsedUser.role === 'admin') {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
     } else {
       router.push('/login');
     }

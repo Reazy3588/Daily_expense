@@ -1,9 +1,9 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, User, UserPlus, Eye, EyeOff, DollarSign } from 'lucide-react';
+import { Mail, Lock, User, UserPlus, Eye, EyeOff, DollarSign, Shield } from 'lucide-react';
 
 export default function RegisterPage() {
     const [name, setName] = useState('');
@@ -13,8 +13,15 @@ export default function RegisterPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [isFirstUser, setIsFirstUser] = useState(false);
     const router = useRouter();
     const { register } = useAuth();
+
+    useEffect(() => {
+        // Check if this is the first user (no users in localStorage)
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        setIsFirstUser(users.length === 0);
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -39,10 +46,17 @@ export default function RegisterPage() {
             return;
         }
 
-        const success = await register(name, email, password);
+        // First user becomes admin automatically
+        const role = isFirstUser ? 'admin' : 'user';
+        const success = await register(name, email, password, role);
 
         if (success) {
-            router.push('/dashboard');
+            // Redirect based on role
+            if (role === 'admin') {
+                router.push('/admin');
+            } else {
+                router.push('/dashboard');
+            }
         } else {
             setError('Email already exists');
         }
@@ -59,6 +73,12 @@ export default function RegisterPage() {
                     </div>
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
                     <p className="text-gray-600">Start tracking your expenses today</p>
+                    {isFirstUser && (
+                        <div className="mt-2 inline-flex items-center gap-1 bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm">
+                            <Shield className="w-4 h-4" />
+                            You will be the ADMIN user
+                        </div>
+                    )}
                 </div>
 
                 <div className="bg-white rounded-2xl shadow-xl p-8">

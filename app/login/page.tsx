@@ -12,7 +12,7 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const router = useRouter();
-    const { login } = useAuth();
+    const { login, user } = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -28,7 +28,15 @@ export default function LoginPage() {
         const success = await login(email, password);
 
         if (success) {
-            router.push('/dashboard');
+            // Get updated user from localStorage
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+
+            // Redirect based on role
+            if (currentUser.role === 'admin') {
+                router.push('/admin');
+            } else {
+                router.push('/dashboard');
+            }
         } else {
             setError('Invalid email or password');
         }
@@ -121,6 +129,15 @@ export default function LoginPage() {
                                 Create Account
                             </Link>
                         </p>
+                    </div>
+
+                    {/* Demo Credentials */}
+                    <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+                        <p className="text-sm text-gray-600 text-center mb-2">Demo Credentials:</p>
+                        <div className="text-xs text-gray-500 space-y-1">
+                            <p><strong>Admin:</strong> admin@example.com / admin123</p>
+                            <p><strong>User:</strong> user@example.com / user123</p>
+                        </div>
                     </div>
                 </div>
             </div>
