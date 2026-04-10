@@ -39,7 +39,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 password: 'admin123',
                 role: 'admin',
                 createdAt: new Date().toISOString(),
-                isActive: true,
             };
             users.push(adminUser);
             localStorage.setItem('users', JSON.stringify(users));
@@ -87,7 +86,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 password,
                 role: 'user',
                 createdAt: new Date().toISOString(),
-                isActive: true,
             };
 
             users.push(newUser);

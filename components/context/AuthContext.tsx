@@ -1,6 +1,6 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, AuthContextType } from '../types';
+import { User, AuthContextType } from '@/app/types';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -78,8 +78,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem('currentUser');
     };
 
+    // Calculate isAdmin based on user role
+    const isAdmin = user?.role === 'admin';
+
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+        <AuthContext.Provider value={{ user, loading, login, register, logout, isAdmin }}>
             {children}
         </AuthContext.Provider>
     );

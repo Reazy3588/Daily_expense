@@ -3,7 +3,7 @@ export interface User {
   email: string;
   name: string;
   password: string;
-  role: 'admin' | 'user'; // Add role field
+  role: 'admin' | 'user';
   createdAt: string;
 }
 
@@ -16,7 +16,7 @@ export interface Expense {
   category?: string;
   createdAt: string;
   userId?: string;
-  userName?: string; // For admin to see who added
+  userName?: string;
 }
 
 export interface ExpenseFormData {
@@ -59,4 +59,13 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   register: (name: string, email: string, password: string, role?: 'admin' | 'user') => Promise<boolean>;
   logout: () => void;
+  isAdmin: boolean; // Add this
+}
+export interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (name: string, email: string, password: string, role?: 'admin' | 'user') => Promise<boolean>;
+  logout: () => void;
+  isAdmin: boolean;
 }
